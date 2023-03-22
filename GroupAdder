@@ -1,0 +1,19 @@
+# Set the path to the CSV file containing the hostnames
+$csvPath = "C:\path\to\hosts.csv"
+
+# Set the name of the group to add to the Administrators group
+$groupName = "DOMAIN\APP_DEVELOPER"
+
+# Prompt the user for a username and password to use for authentication
+$credential = Get-Credential
+
+# Iterate through the hostnames in the CSV file and PSRemote into each one
+Import-Csv $csvPath | ForEach-Object {
+    $hostname = $_.Hostname
+
+    # Use PSRemoting to run the command on the remote host, using the specified credentials
+    Invoke-Command -ComputerName $hostname -Credential $credential -ScriptBlock {
+        # Add the group to the Administrators group
+        Add-LocalGroupMember -Group "Administrators" -Member $using:groupName
+    }
+}
