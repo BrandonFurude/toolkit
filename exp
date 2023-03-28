@@ -1,0 +1,60 @@
+Install-Module -Name ImportExcel -Scope CurrentUser
+
+param (
+    [string]$ArcherInstanceUrl,
+    [string]$ApiKey,
+    [string]$Username,
+    [string]$Password,
+    [int]$ReportId,
+    [string]$OutputFile
+)
+
+# Install the ImportExcel module if not already installed
+if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
+    Install-Module -Name ImportExcel -Scope CurrentUser
+}
+
+# Function to authenticate and retrieve a session token
+function Get-ArcherSessionToken {
+    param (
+        [string]$InstanceUrl,
+        [string]$ApiKey,
+        [string]$Username,
+        [string]$Password
+    )
+
+    $authBody = @{
+        InstanceUrl = $InstanceUrl
+        ApiKey      = $ApiKey
+        Username    = $Username
+        Password    = $Password
+    }
+
+    $authResponse = Invoke-RestMethod -Method Post -Uri "$($InstanceUrl)/api/core/security/login" -ContentType "application/json" -Body (ConvertTo-Json $authBody)
+    return $authResponse.requestedObject.sessionToken
+}
+
+# Function to retrieve a report
+function Get-ArcherReport {
+    param (
+        [string]$InstanceUrl,
+        [string]$SessionToken,
+        [int]$ReportId
+    )
+
+    $headers = @{
+        Authorization = "Archer session-id=$SessionToken"
+    }
+
+    $reportResponse = Invoke-RestMethod -Method Get -Uri "$($InstanceUrl)/api/core/content/management/report/$($ReportId)/export" -ContentType "application/json" -Headers $headers
+    return $reportResponse
+}
+
+# Main script execution
+$sessionToken = Get-ArcherSessionToken -InstanceUrl $ArcherInstanceUrl -ApiKey $ApiKey -Username $Username -Password $Password
+$reportData = Get-ArcherReport -InstanceUrl $ArcherInstanceUrl -SessionToken $sessionToken -ReportId $ReportId
+
+# Convert the JSON report data to a PowerShell object and export to an Excel file
+$reportData | ConvertFrom-Json | Export-Excel -Path $OutputFile
+
+.\Get-ArcherReport.ps1 -ArcherInstanceUrl 'https://yourarcherinstance.com' -ApiKey 'your-api-key' -Username 'your-username' -Password 'your-password' -ReportId 12345 -OutputFile 'output.xlsx'
