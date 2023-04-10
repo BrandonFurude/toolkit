@@ -4,7 +4,7 @@ if (-not (Get-Module -Name ActiveDirectory)) {
 }
 
 # Define the CSV file path
-$csvFilePath = "path\to\your\csvfile.csv"
+$csvFilePath = "csvfile.csv"
 
 # Import the CSV file
 $csvData = Import-Csv -Path $csvFilePath
@@ -14,14 +14,21 @@ $results = @()
 
 # Loop through each user in the CSV file
 foreach ($user in $csvData) {
+    # Get the user's domain
+    $domain = $user.Domain
+
+    # Get the user's domain and username in the format 'Domain\Username'
+    $domainUsername = "$domain\$($user.Username)"
+
     # Get the last logon date of the user from Active Directory
-    $lastLogon = (Get-ADUser -Identity $user.Username -Properties lastLogon).lastLogon
+    $lastLogon = (Get-ADUser -Identity $domainUsername -Properties lastLogon).lastLogon
 
     # Convert the last logon date to a readable format
     $lastLogonDate = [DateTime]::FromFileTime($lastLogon)
 
     # Add the result to the results array
     $results += New-Object PSObject -Property @{
+        Domain = $domain
         Username = $user.Username
         LastLogonDate = $lastLogonDate
     }
