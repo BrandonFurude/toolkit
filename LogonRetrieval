@@ -3,39 +3,44 @@ if (-not (Get-Module -Name ActiveDirectory)) {
     Import-Module ActiveDirectory
 }
 
-# Define the CSV file path
-$csvFilePath = "csvfile.csv"
+# Prompt user for server name
+$ServerName = Read-Host "Please enter the server name"
 
-# Import the CSV file
-$csvData = Import-Csv -Path $csvFilePath
+# Prompt user for CSV file path
+$CSVPath = Read-Host "Please enter the path to the CSV file"
 
-# Initialize an empty array to store the results
-$results = @()
+# Check if file exists
+if (-not (Test-Path $CSVPath)) {
+    Write-Error "File not found. Please check the path and try again."
+    exit
+}
 
-# Loop through each user in the CSV file
-foreach ($user in $csvData) {
-    # Get the user's domain
-    $domain = $user.Domain
+# Import CSV data
+$CSVData = Import-Csv -Path $CSVPath
 
-    # Get the user's domain and username in the format 'Domain\Username'
-    $domainUsername = "$domain\$($user.Username)"
+# Initialize an array to store the output
+$UserLogonInfo = @()
 
-    # Get the last logon date of the user from Active Directory
-    $lastLogon = (Get-ADUser -Identity $domainUsername -Properties lastLogon).lastLogon
+# Loop through each user in the CSV data
+foreach ($User in $CSVData) {
+    try {
+        # Get AD user information
+        $ADUser = Get-ADUser -Identity $User.UserName -Properties LastLogon -Server $ServerName -ErrorAction Stop
 
-    # Convert the last logon date to a readable format
-    $lastLogonDate = [DateTime]::FromFileTime($lastLogon)
-
-    # Add the result to the results array
-    $results += New-Object PSObject -Property @{
-        Domain = $domain
-        Username = $user.Username
-        LastLogonDate = $lastLogonDate
+        # Add the user information to the output array
+        $UserLogonInfo += [PSCustomObject]@{
+            UserName   = $ADUser.SamAccountName
+            LastLogon  = [DateTime]::FromFileTime($ADUser.LastLogon)
+        }
+    }
+    catch {
+        Write-Warning "User $($User.UserName) not found or an error occurred."
     }
 }
 
-# Export the results to a new CSV file
-$results | Export-Csv -Path "path\to\your\outputfile.csv" -NoTypeInformation
+# Display the last logon dates
+$UserLogonInfo | Format-Table -AutoSize
 
-# Display the results in the console
-$results | Format-Table -AutoSize
+# Export the data to a CSV file
+$UserLogonInfo | Export-Csv -Path "LastLogonReport.csv" -NoTypeInformation
+Write-Host "Last logon report exported to LastLogonReport.csv"
