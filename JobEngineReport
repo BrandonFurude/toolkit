@@ -7,14 +7,21 @@ $ScriptBlock = {
     $LastRestart = (Get-WmiObject -Class Win32_OperatingSystem).LastBootUpTime
     $LastRestartTime = [Management.ManagementDateTimeConverter]::ToDateTime($LastRestart)
 
-    # Query Event Viewer for RSAArcherJobEngine events
-    $Events = Get-WinEvent -FilterHashtable @{ LogName='Application'; ProviderName='RSAArcherJobEngine' }
+    # Query Event Viewer for events in the Application log
+    $AllEvents = Get-WinEvent -FilterHashtable @{ LogName = 'Application' }
+
+    # Filter events by description containing 'RSAArcherJobEngine'
+    $FilteredEvents = $AllEvents | Where-Object {
+        $eventXml = [xml]$_.ToXml()
+        $description = $eventXml.Event.EventData.Data
+        $description -match 'RSAArcherJobEngine'
+    }
 
     # Return results as a custom object
     $Result = [PSCustomObject]@{
         Hostname = $env:COMPUTERNAME
         LastRestart = $LastRestartTime
-        RSAArcherJobEngine_Events = $Events
+        RSAArcherJobEngine_Events = $FilteredEvents
     }
     return $Result
 }
