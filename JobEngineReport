@@ -1,5 +1,5 @@
-# Read list of hosts
-$Hosts = Get-Content -Path "hosts.txt"
+# Read list of hosts, skipping the first line (header)
+$Hosts = Get-Content -Path "hosts.txt" | Select-Object -Skip 1
 
 # Define scriptblock to execute remotely
 $ScriptBlock = {
@@ -14,7 +14,7 @@ $ScriptBlock = {
     $Result = [PSCustomObject]@{
         Hostname = $env:COMPUTERNAME
         LastRestart = $LastRestartTime
-        RSAArcherJobEngineEvents = $Events
+        RSAArcherJobEngine_Events = $Events
     }
     return $Result
 }
@@ -37,6 +37,6 @@ $AllResults | ForEach-Object {
     Write-Host "Hostname: $($_.Hostname)"
     Write-Host "Last Restart: $($_.LastRestart)"
     Write-Host "RSAArcherJobEngine Events:"
-    $_.RSAArcherJobEngineEvents | Format-Table -AutoSize
+    $_.RSAArcherJobEngine_Events | Format-Table -AutoSize
     Write-Host ""
 }
