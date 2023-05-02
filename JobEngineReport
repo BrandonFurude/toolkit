@@ -1,0 +1,42 @@
+# Read list of hosts
+$Hosts = Get-Content -Path "hosts.txt"
+
+# Define scriptblock to execute remotely
+$ScriptBlock = {
+    # Get last restart time
+    $LastRestart = (Get-WmiObject -Class Win32_OperatingSystem).LastBootUpTime
+    $LastRestartTime = [Management.ManagementDateTimeConverter]::ToDateTime($LastRestart)
+
+    # Query Event Viewer for RSAArcherJobEngine events
+    $Events = Get-WinEvent -FilterHashtable @{ LogName='Application'; ProviderName='RSAArcherJobEngine' }
+
+    # Return results as a custom object
+    $Result = [PSCustomObject]@{
+        Hostname = $env:COMPUTERNAME
+        LastRestart = $LastRestartTime
+        RSAArcherJobEngineEvents = $Events
+    }
+    return $Result
+}
+
+# Iterate through hosts and execute the tasks
+$AllResults = @()
+foreach ($Host in $Hosts) {
+    try {
+        $Session = New-PSSession -ComputerName $Host -Authentication Default
+        $Output = Invoke-Command -Session $Session -ScriptBlock $ScriptBlock
+        $AllResults += $Output
+        Remove-PSSession -Session $Session
+    } catch {
+        Write-Host "Error connecting to $Host: $_" -ForegroundColor Red
+    }
+}
+
+# Display the results
+$AllResults | ForEach-Object {
+    Write-Host "Hostname: $($_.Hostname)"
+    Write-Host "Last Restart: $($_.LastRestart)"
+    Write-Host "RSAArcherJobEngine Events:"
+    $_.RSAArcherJobEngineEvents | Format-Table -AutoSize
+    Write-Host ""
+}
