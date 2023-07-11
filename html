@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Display</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>GUID</th>
+            <th>ExecutionStatus</th>
+        </tr>
+        {% for item in data %}
+        <tr>
+            <td>{{ item.Name }}</td>
+            <td>{{ item.GUID }}</td>
+            <td>{{ item.ExecutionStatus }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
