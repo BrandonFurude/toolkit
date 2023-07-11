@@ -1,0 +1,72 @@
+from flask import Flask, jsonify, render_template
+import json
+
+app = Flask(__name__)
+
+data = {
+  "@odata.context":"https://sanitized/api/V2/Internal/$metadata#Collection(EntityModel.DataFeedRow)",
+  "@odata.count":3,
+  "value":[
+    {
+      "Id":6223,
+      "GUID":"8e9129b5-2ad1-40c7-93bd-d7b8fc13368b",
+      "Name":"sanitized",
+      "StartTime":"2023-07-10T23:00:34.583Z",
+      "EndTime":"2023-07-10T23:00:42.53Z",
+      "NextStartTime":"2023-07-11T23:00:00Z",
+      "IsActive":true,
+      "UpdatedDate":"2023-07-10T23:00:38.883Z",
+      "UpdatedBy":"Data Feed Service, Archer",
+      "Target":null,
+      "ExecutionStatusEnum":"0",
+      "ExecutionStatus":"Faulted",
+      "Duration":"00:00:00",
+      "Predecessor":null,
+      "TransporterType":null,
+      "RecentHistoryId":4210105
+    },
+    {
+      "Id":2425,
+      "GUID":"a8894a3f-7b49-4548-b888-eb212adacb17",
+      "Name":"sanitized",
+      "StartTime":"2023-02-21T02:31:41.463Z",
+      "EndTime":"2023-02-21T02:32:17.537Z",
+      "NextStartTime":null,
+      "IsActive":true,
+      "UpdatedDate":"2023-02-21T02:32:17.387Z",
+      "UpdatedBy":"Data Feed Service, san",
+      "Target":"san",
+      "ExecutionStatusEnum":"0",
+      "ExecutionStatus":"Faulted",
+      "Duration":"00:00:00",
+      "Predecessor":null,
+      "TransporterType":null,
+      "RecentHistoryId":4186804
+    },
+    {
+      "Id":4277,
+      "GUID":"eddeeb8b-d31e-4505-848b-48282f68c9ca",
+      "Name":"sanitized",
+      "StartTime":"2023-06-02T17:34:19.423Z",
+      "EndTime":"2023-06-02T17:34:40.533Z",
+      "NextStartTime":"2099-12-01T01:00:00Z",
+      "IsActive":true,
+      "UpdatedDate":"2023-06-05T19:19:11.013Z",
+      "UpdatedBy":"san",
+      "Target":null,
+      "ExecutionStatusEnum":"0",
+      "ExecutionStatus":"Faulted",
+      "Duration":"00:00:00",
+      "Predecessor":null,
+      "TransporterType":null,
+      "RecentHistoryId":4200666
+    }
+  ]
+}
+
+@app.route('/')
+def home():
+    return render_template('index.html', data=data['value'])
+
+if __name__ == "__main__":
+    app.run(debug=True)
